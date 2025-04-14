@@ -4,11 +4,11 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
+@Table(name = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "users")
 public class User {
 
     @Id
@@ -21,4 +21,14 @@ public class User {
     private String email;
 
     private String password;
+
+    // New profile fields:
+    @Column(name = "college_name")
+    private String collegeName;
+
+    @Column(name = "university_name")
+    private String universityName;
+
+    @Column(name = "course_name")
+    private String courseName;
 }

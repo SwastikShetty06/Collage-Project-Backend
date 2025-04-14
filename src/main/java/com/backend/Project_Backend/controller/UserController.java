@@ -1,15 +1,16 @@
 package com.backend.Project_Backend.controller;
 
 import com.backend.Project_Backend.dto.ChangePasswordRequest;
+import com.backend.Project_Backend.dto.UpdateUserDTO;
 import com.backend.Project_Backend.dto.UserDTO;
 import com.backend.Project_Backend.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.backend.Project_Backend.model.User;
-import com.backend.Project_Backend.repository.UserRepository;
-import com.backend.Project_Backend.dto.ChangePasswordRequest; // Also import your DTO class
 
-
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -18,33 +19,37 @@ import java.util.Optional;
 public class UserController {
 
     private final UserService userService;
-    private final UserRepository userRepository;
+
     @GetMapping("/{id}")
     public Optional<UserDTO> getProfile(@PathVariable Long id) {
         return userService.getUserProfile(id);
     }
 
-    @PutMapping("/{id}")
-    public String updateProfile(@PathVariable Long id, @RequestBody UserDTO updatedUser) {
-        return userService.updateUser(id, updatedUser);
+    @PutMapping("/update/{id}")
+    public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody UpdateUserDTO dto) {
+        String result = userService.updateUser(id, dto);
+        return ResponseEntity.ok(result);
     }
 
     @PutMapping("/{id}/password")
-    public String changePassword(@PathVariable Long id, @RequestBody ChangePasswordRequest request) {
-        Optional<User> userOpt = userRepository.findById(id);
-        if (userOpt.isEmpty()) {
-            return "User not found";
+    public ResponseEntity<Map<String, String>> changePassword(
+            @PathVariable Long id,
+            @RequestBody ChangePasswordRequest request
+    ) {
+        boolean success = userService.changePassword(id, request.getNewPassword());
+        Map<String, String> response = new HashMap<>();
+        if (success) {
+            response.put("message", "Password updated successfully");
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("message", "Failed to update password");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-
-        User user = userOpt.get();
-        user.setPassword(request.getNewPassword());
-        userRepository.save(user);
-        return "Password changed successfully";
     }
 
     @DeleteMapping("/{id}")
-    public String deleteUser(@PathVariable Long id) {
-        return userService.deleteUser(id);
+    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
+        String result = userService.deleteUser(id);
+        return ResponseEntity.ok(result);
     }
 }
-

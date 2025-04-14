@@ -1,6 +1,7 @@
 package com.backend.Project_Backend.service;
 
 import com.backend.Project_Backend.dto.UserDTO;
+import com.backend.Project_Backend.dto.UpdateUserDTO;
 import com.backend.Project_Backend.model.User;
 import com.backend.Project_Backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    // Fetch complete profile information
     public Optional<UserDTO> getUserProfile(Long userId) {
         return userRepository.findById(userId)
                 .map(user -> {
@@ -21,32 +23,45 @@ public class UserService {
                     dto.setId(user.getId());
                     dto.setFullName(user.getFullName());
                     dto.setEmail(user.getEmail());
+                    dto.setCollegeName(user.getCollegeName());
+                    dto.setUniversityName(user.getUniversityName());
+                    dto.setCourseName(user.getCourseName());
                     return dto;
                 });
     }
 
-
-    public String updateUser(Long id, UserDTO updated) {
+    // Update profile fields (collegeName, universityName, courseName)
+    public String updateUser(Long id, UpdateUserDTO updated) {
         Optional<User> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty()) return "User not found";
 
         User user = userOpt.get();
-        user.setFullName(updated.getFullName());
-        user.setEmail(updated.getEmail());
+
+        if (updated.getCollegeName() != null && !updated.getCollegeName().isBlank()) {
+            user.setCollegeName(updated.getCollegeName());
+        }
+        if (updated.getUniversityName() != null && !updated.getUniversityName().isBlank()) {
+            user.setUniversityName(updated.getUniversityName());
+        }
+        if (updated.getCourseName() != null && !updated.getCourseName().isBlank()) {
+            user.setCourseName(updated.getCourseName());
+        }
         userRepository.save(user);
         return "User updated successfully";
     }
 
-    public String changePassword(Long id, String newPassword) {
+    // Update the password in plain text (security configuration removed)
+    public boolean changePassword(Long id, String newPassword) {
         Optional<User> userOpt = userRepository.findById(id);
-        if (userOpt.isEmpty()) return "User not found";
+        if (userOpt.isEmpty()) return false;
 
         User user = userOpt.get();
-        user.setPassword(newPassword); // In real apps, hash it
+        user.setPassword(newPassword);
         userRepository.save(user);
-        return "Password changed successfully";
+        return true;
     }
 
+    // Delete user by ID
     public String deleteUser(Long id) {
         if (!userRepository.existsById(id)) return "User not found";
         userRepository.deleteById(id);

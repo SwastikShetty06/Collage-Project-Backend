@@ -22,7 +22,7 @@ public class User {
 
     private String password;
 
-    // New profile fields:
+    // Existing profile fields
     @Column(name = "college_name")
     private String collegeName;
 
@@ -31,4 +31,8 @@ public class User {
 
     @Column(name = "course_name")
     private String courseName;
+
+    // New field for best friend’s name (for password recovery)
+    @Column(name = "best_friend_name")
+    private String bestFriendName;
 }

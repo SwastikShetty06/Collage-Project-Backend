@@ -63,6 +63,22 @@ public class UserService {
         return true;
     }
 
+    // New method: Forgot password functionality
+    public boolean forgotPassword(String email, String bestFriendName, String newPassword) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isPresent()){
+            User user = userOpt.get();
+            // Validate best friend’s name (case-insensitive)
+            if(user.getBestFriendName() != null &&
+                    user.getBestFriendName().equalsIgnoreCase(bestFriendName)) {
+                user.setPassword(newPassword);
+                userRepository.save(user);
+                return true;
+            }
+        }
+        return false;
+    }
+
     // Delete user by ID
     public String deleteUser(Long id) {
         if (!userRepository.existsById(id)) return "User not found";
@@ -106,5 +122,4 @@ public class UserService {
                 })
                 .collect(Collectors.toList());
     }
-
 }

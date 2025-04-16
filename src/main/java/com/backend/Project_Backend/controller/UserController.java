@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -51,5 +52,17 @@ public class UserController {
     public ResponseEntity<String> deleteUser(@PathVariable Long id) {
         String result = userService.deleteUser(id);
         return ResponseEntity.ok(result);
+    }
+
+    // Endpoint to get all users
+    @GetMapping("/all")
+    public List<UserDTO> getAllUsers() {
+        return userService.getAllUsers();
+    }
+
+    // Endpoint to search users
+    @GetMapping("/search")
+    public List<UserDTO> searchUsers(@RequestParam String query) {
+        return userService.searchUsers(query);
     }
 }

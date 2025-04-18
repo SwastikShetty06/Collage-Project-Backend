@@ -65,4 +65,46 @@ public class UserController {
     public List<UserDTO> searchUsers(@RequestParam String query) {
         return userService.searchUsers(query);
     }
+
+    // In UserController.java
+    @PostMapping("/{followerId}/follow/{followedId}")
+    public ResponseEntity<String> follow(@PathVariable Long followerId, @PathVariable Long followedId) {
+        boolean result = userService.followUser(followerId, followedId);
+        return ResponseEntity.ok(result ? "Followed successfully" : "Failed to follow");
+    }
+
+    @DeleteMapping("/{followerId}/unfollow/{followedId}")
+    public ResponseEntity<String> unfollow(
+            @PathVariable Long followerId,
+            @PathVariable Long followedId
+    ) {
+        try {
+            boolean ok = userService.unfollowUser(followerId, followedId);
+            if (ok) {
+                return ResponseEntity.ok("Unfollowed successfully");
+            } else {
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body("No such follow relationship");
+            }
+        } catch (Exception e) {
+            // Print the real exception to your console
+            e.printStackTrace();
+            // Return a JSON message with the exception message
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error unfollowing user: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/{userId}/following")
+    public ResponseEntity<List<UserDTO>> getFollowedUsers(@PathVariable Long userId) {
+        List<UserDTO> followedUsers = userService.getFollowedUsers(userId);
+        if (followedUsers.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(followedUsers);  // No content if no users are followed
+        }
+        return ResponseEntity.ok(followedUsers);
+    }
+
+
 }

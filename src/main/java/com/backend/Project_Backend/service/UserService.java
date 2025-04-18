@@ -2,10 +2,13 @@ package com.backend.Project_Backend.service;
 
 import com.backend.Project_Backend.dto.UserDTO;
 import com.backend.Project_Backend.dto.UpdateUserDTO;
+import com.backend.Project_Backend.model.Follow;
 import com.backend.Project_Backend.model.User;
+import com.backend.Project_Backend.repository.FollowRepository;
 import com.backend.Project_Backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,9 +18,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService {
 
+    private final FollowRepository followRepository;
     private final UserRepository userRepository;
 
-    // Fetch complete profile information
     public Optional<UserDTO> getUserProfile(Long userId) {
         return userRepository.findById(userId)
                 .map(user -> {
@@ -32,7 +35,6 @@ public class UserService {
                 });
     }
 
-    // Update profile fields (collegeName, universityName, courseName)
     public String updateUser(Long id, UpdateUserDTO updated) {
         Optional<User> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty()) return "User not found";
@@ -52,7 +54,6 @@ public class UserService {
         return "User updated successfully";
     }
 
-    // Update the password in plain text (security configuration removed)
     public boolean changePassword(Long id, String newPassword) {
         Optional<User> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty()) return false;
@@ -63,14 +64,11 @@ public class UserService {
         return true;
     }
 
-    // New method: Forgot password functionality
     public boolean forgotPassword(String email, String bestFriendName, String newPassword) {
         Optional<User> userOpt = userRepository.findByEmail(email);
-        if (userOpt.isPresent()){
+        if (userOpt.isPresent()) {
             User user = userOpt.get();
-            // Validate best friend’s name (case-insensitive)
-            if(user.getBestFriendName() != null &&
-                    user.getBestFriendName().equalsIgnoreCase(bestFriendName)) {
+            if (user.getBestFriendName() != null && user.getBestFriendName().equalsIgnoreCase(bestFriendName)) {
                 user.setPassword(newPassword);
                 userRepository.save(user);
                 return true;
@@ -79,14 +77,12 @@ public class UserService {
         return false;
     }
 
-    // Delete user by ID
     public String deleteUser(Long id) {
         if (!userRepository.existsById(id)) return "User not found";
         userRepository.deleteById(id);
         return "User deleted";
     }
 
-    // Fetch all user profiles
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll().stream().map(user -> {
             UserDTO dto = new UserDTO();
@@ -100,7 +96,6 @@ public class UserService {
         }).collect(Collectors.toList());
     }
 
-    // Search users by different properties (university, course, etc.)
     public List<UserDTO> searchUsers(String query) {
         return userRepository.findAll().stream()
                 .filter(user ->
@@ -118,6 +113,56 @@ public class UserService {
                     dto.setCollegeName(user.getCollegeName());
                     dto.setUniversityName(user.getUniversityName());
                     dto.setCourseName(user.getCourseName());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    public boolean followUser(Long followerId, Long followedId) {
+        User follower = userRepository.findById(followerId).orElse(null);
+        User followed = userRepository.findById(followedId).orElse(null);
+        if (follower == null || followed == null) return false;
+
+        if (followRepository.findByFollowerAndFollowed(follower, followed).isEmpty()) {
+            Follow follow = new Follow();
+            follow.setFollower(follower);
+            follow.setFollowed(followed);
+            followRepository.save(follow);
+        }
+        return true;
+    }
+
+    @Transactional
+    public boolean unfollowUser(Long followerId, Long followedId) {
+        User follower = userRepository.findById(followerId).orElse(null);
+        User followed = userRepository.findById(followedId).orElse(null);
+        if (follower == null || followed == null) return false;
+
+        followRepository.deleteByFollowerAndFollowed(follower, followed);
+        return true;
+    }
+
+    public List<UserDTO> getFollowedUsers(Long userId) {
+        User follower = userRepository.findById(userId).orElse(null);
+        if (follower == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+
+        List<Follow> follows = followRepository.findByFollower(follower);
+        if (follows.isEmpty()) {
+            return List.of();
+        }
+
+        return follows.stream()
+                .map(f -> {
+                    User followedUser = f.getFollowed();
+                    UserDTO dto = new UserDTO();
+                    dto.setId(followedUser.getId());
+                    dto.setFullName(followedUser.getFullName());
+                    dto.setEmail(followedUser.getEmail());
+                    dto.setCollegeName(followedUser.getCollegeName());
+                    dto.setUniversityName(followedUser.getUniversityName());
+                    dto.setCourseName(followedUser.getCourseName());
                     return dto;
                 })
                 .collect(Collectors.toList());

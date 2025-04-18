@@ -35,4 +35,6 @@ public class User {
     // New field for best friend’s name (for password recovery)
     @Column(name = "best_friend_name")
     private String bestFriendName;
+
+
 }

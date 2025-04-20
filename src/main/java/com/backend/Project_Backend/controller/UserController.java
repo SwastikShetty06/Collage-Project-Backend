@@ -106,5 +106,14 @@ public class UserController {
         return ResponseEntity.ok(followedUsers);
     }
 
-
+    @GetMapping("/{userId}/followers")
+    public ResponseEntity<?> getFollowers(@PathVariable Long userId) {
+        try {
+            List<UserDTO> followers = userService.getFollowers(userId);
+            return ResponseEntity.ok(followers);
+        } catch (IllegalStateException e) {
+            // If no followers, return a custom message
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Nobody is following you");
+        }
+    }
 }

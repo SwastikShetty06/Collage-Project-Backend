@@ -167,4 +167,30 @@ public class UserService {
                 })
                 .collect(Collectors.toList());
     }
+
+    public List<UserDTO> getFollowers(Long userId) {
+        User followed = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // Fetch all users who follow the "followed" user
+        List<Follow> follows = followRepository.findByFollowed(followed);
+
+        if (follows.isEmpty()) {
+            throw new IllegalStateException("Nobody is following you");
+        }
+
+        return follows.stream()
+                .map(f -> {
+                    User follower = f.getFollower();  // This is the user who is following
+                    UserDTO dto = new UserDTO();
+                    dto.setId(follower.getId());
+                    dto.setFullName(follower.getFullName());
+                    dto.setEmail(follower.getEmail());
+                    dto.setCollegeName(follower.getCollegeName());
+                    dto.setUniversityName(follower.getUniversityName());
+                    dto.setCourseName(follower.getCourseName());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
 }

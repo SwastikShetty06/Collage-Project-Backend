@@ -1,7 +1,11 @@
 package com.backend.Project_Backend.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -22,7 +26,6 @@ public class User {
 
     private String password;
 
-    // Existing profile fields
     @Column(name = "college_name")
     private String collegeName;
 
@@ -32,9 +35,10 @@ public class User {
     @Column(name = "course_name")
     private String courseName;
 
-    // New field for best friend’s name (for password recovery)
     @Column(name = "best_friend_name")
     private String bestFriendName;
 
-
+    @OneToMany(mappedBy = "uploader", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference // Only serialize from User → Notes
+    private List<Note> notes = new ArrayList<>();
 }
